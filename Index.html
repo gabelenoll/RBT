@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <style type="text/css">
+  </style>
+  <head>
+    <title>Nodes Test</title>
+    <script type="module">
+
+import * as mDOMHelper from "./Helpers/DOMHelper.js";
+import * as mNodes from "./DOM/Nodes.js";
+import * as mDiag from "./DOM/Diag.js";
+
+var fnInitElement = mDOMHelper.initElement;
+
+var eBody = document.body;
+var eDiag = fnInitElement().par(eBody).tag("div").create().get();
+var eNodes = fnInitElement().par(eBody).tag("div").create().get();
+
+var oDiag = mDiag.create( {
+  element: eDiag });
+
+var eMain;
+var oNodes = mNodes.create( {
+  compareData: function(oData1, oData2){return oData1 < oData2 ? -1 : oData1 > oData2 ? 1 : 0;},
+  traits: [{
+    mainInitialized(_1, eMain_){eMain = eMain_},
+    nodeInitialized(_1, {node: eNode, data: oData}){eNode.textContent = oData;} }],
+  element: eNodes });
+
+oDiag.addEventListener (
+  "add",
+  function(v) {
+    oNodes.addNodes([v.detail.text]); });
+
+    </script>
+  </head>
+  <body></body>
+</html>
