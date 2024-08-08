@@ -1,0 +1,10 @@
+{
+  "routes": [
+    {
+      "route": "/",
+      "rewrite": "/index.html" }],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclue": ["/DOM/*.js", "Helpers/*.js"]
+    }
+  }

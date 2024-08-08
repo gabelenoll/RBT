@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+  <style type="text/css">
+
+body {
+  margin: 0;
+  }
+div:nth-of-type(2) {
+  display: inline-block;
+  border: 1px solid lightgrey;
+  }
+canvas {
+  vertical-align: top;
+  }
+input {
+  width: 5em;
+  }
+
+  </style>
+  <head>
+    <title>Test RBT</title>
+    <script type="module">
+
+import * as mRBT from "./rbt.js";
+
+var sLog = "";
+
+function fnSetFont() {
+  oCtx.font = "20px sans-serif"; }
+
+function fnPrepareDrawNode(oNode) {
+
+  function fnDraw(rroHitTest, nX, nY, nPX, nPY) {
+
+    var nX0 = nX + nWidth / 2;
+    var nY0 = nY + nOwnHeight / 2;
+
+    if(nPX != null) {
+      oCtx.beginPath();
+      oCtx.moveTo(nPX, nPY);
+      oCtx.lineTo(nX0, nY0);
+      oCtx.lineWidth = 2;
+      oCtx.stroke(); }
+
+    if(oPrepLeft != null) {
+      oPrepLeft.draw(rroHitTest, nX, nY + nDV, nX0, nY0);
+      oPrepRight.draw(rroHitTest, nX + oPrepLeft.width + nDH, nY + nDV, nX0, nY0); }
+      
+    var nXT = nX0 - (nBR - nBL) / 2;
+    var nXB = nXT - nBL;
+    var nYB = nY0 - nBH / 2;
+    var nDY = nBH * nF;
+    var nXR = nXB + nBL + nBR;
+    var nYT = nYB - nDY;
+    var nYC = nYB + nBH / 2;
+    var nR = nBH / 2 + nDY;
+    var nA1 = Math.PI / 2;
+    var nA2 = 3 * nA1;
+    oCtx.beginPath();
+    oCtx.moveTo(nXB, nYT);
+    oCtx.lineTo(nXR, nYT);
+    oCtx.arc(nXR, nYC, nR, nA2, nA1);
+    oCtx.lineTo(nXB, nYB + nBH + nDY);
+    oCtx.arc(nXB, nYC, nR, nA1, nA2);
+    oCtx.lineWidth = nWL;
+    oCtx.stroke();
+    oCtx.fillStyle = fRed ? "red" : "black";
+    oCtx.fill();
+    oCtx.fillStyle = "white";
+    oCtx.fillText(sText, nXT, nYB + nBH);
+    oCtx.lineWidth = 1;
+
+    if(! oNode.isNil)
+      rroHitTest.push([nXB - nR, nYB, nXR + nR, nYB + nBH + nDY, oNode]); }
+
+  var sText = oNode.isNil ? "NIL" : `${oNode.data.sValue}:${oNode.count}`;
+  var fRed = oNode.red;
+
+  var oMetrics = oCtx.measureText(sText);
+  var nBH = oMetrics.actualBoundingBoxAscent;
+  var nBL = oMetrics.actualBoundingBoxLeft;
+  var nBR = oMetrics.actualBoundingBoxRight;
+  var nWL = nBH / 25;
+
+  var nOwnHeight = nBH + 2 * nBH * nF + nWL;
+  var nOwnWidth = (nBR + nBL) + (nBH + 2 * nBH * nF) + nWL;
+  var nWidth, nHeight;
+  var oPrepLeft, oPrepRight;
+  if(oNode.isNil) {
+      nWidth = nOwnWidth;
+      nHeight = nOwnHeight; }
+    else {
+      oPrepLeft = fnPrepareDrawNode(oNode.left);
+      oPrepRight = fnPrepareDrawNode(oNode.right);
+      nWidth = oPrepLeft.width + oPrepRight.width + 50;
+      nHeight = Math.max(oPrepLeft.height, oPrepRight.height) + 50; }
+
+  return {
+    width: nWidth,
+    height: nHeight,
+    draw: fnDraw }};
+
+function fnPrepareDrawTree(oTree) {
+  function fnDraw() {
+    var roRet = [];
+    oPrep.draw(roRet, nB, nB);
+    return roRet; }
+  var oPrep = fnPrepareDrawNode(oTree.root, false);
+  var nWidth = oPrep.width + 2 * nB;
+  var nHeight = oPrep.height + 2 * nB;
+  return {
+    width: nWidth,
+    height: nHeight,
+    draw: fnDraw };}
+
+const nF = 0.4;
+const nB = 20;
+const nDH = 30;
+const nDV = 50;
+
+function fnCompareData(o1, o2) {
+  var s1 = o1.sValue;
+  var s2 = o2.sValue;
+  return s1 < s2 ? -1 : s1 > s2 ? 1 : 0; }
+
+function fnCreateData(s) {
+  return {
+    get sValue(){return s;} };}
+
+var nIndex = 0;
+var rn = [62, 12, 18, 8, 54, 94, 61, 81, 41, 89, 76, 50, 93, 91, 32, 15, 26, 90, 23, 10, 52, 69, 39, 5, 75, 72, 68, 7, 47, 71, 38, 80, 59, 34, 25, 11, 45, 98, 64, 33, 35, 83, 56, 55, 40, 6, 73, 67, 20, 43, 86, 24, 3, 60, 58, 66, 48, 27, 2, 9, 100, 77, 63, 4, 14, 29, 13, 49, 99, 16, 46, 92, 53, 51, 88, 21, 84, 79, 97, 28, 44, 74, 85, 82, 36, 17, 22, 78, 57, 42, 30, 65, 96, 95, 87, 70, 1, 37, 19, 31];
+var nCount = rn.length;
+document.getElementById("insert").addEventListener (
+  "click",
+  function() {
+    if(nIndex < nCount) {
+      var nData = rn[nIndex++];
+      sLog += `i${nData} `;
+      oRBT.insert(fnCreateData(nData));
+      oRBT.assertValid();
+      rroHitTest = fnDrawTree(); }},
+  false );
+
+document.getElementById("log").addEventListener (
+  "click",
+  function() {
+    console.log(sLog); },
+  false );
+
+document.getElementById("clone1").addEventListener (
+  "click",
+  function() {
+    oRBT = oRBT.clone();
+    rroHitTest = fnDrawTree(); },
+  false );
+
+var nClone1SortDirection = 1;
+document.getElementById("clone2").addEventListener (
+  "click",
+  function() {
+    nClone1SortDirection *= -1;
+    oRBT = oRBT.clone(function(o1, o2){return nClone1SortDirection * fnCompareData(o1, o2);});
+    rroHitTest = fnDrawTree(); },
+  false );
+
+document.getElementById("getAt").addEventListener (
+  "click",
+  function() {
+    var oNode = oRBT.getAt(parseInt(eIn.value));
+    console.log(oNode.isNil ? "NIL" : oNode.data.sValue); },
+  false );
+
+document.getElementById("getIndex").addEventListener (
+  "click",
+  function() {
+    console.log(oRBT.find(fnCreateData(eIn.value)).index); },
+  false );
+  
+document.getElementById("getPrev").addEventListener (
+  "click",
+  function() {
+    console.log(oRBT.find(fnCreateData(eIn.value)).prev.data.sValue); },
+  false );
+  
+document.getElementById("getNext").addEventListener (
+  "click",
+  function() {
+    console.log(oRBT.find(fnCreateData(eIn.value)).next.data.sValue); },
+  false );
+  
+var oRBT = mRBT.create(fnCompareData);
+
+var eCanvas = document.getElementById("out");
+var eIn = document.getElementById("in");
+var oCtx = eCanvas.getContext("2d");
+
+var nWidth, nHeight;
+function fnDrawTree() {
+  fnSetFont();
+  var oPrep = fnPrepareDrawTree(oRBT);
+  var nWidth_ = oPrep.width;
+  var nHeight_ = oPrep.height;
+  if(nWidth != nWidth_ || nHeight != nHeight_) {
+      eCanvas.width = nWidth = nWidth_ ;
+      eCanvas.height = nHeight = nHeight_;
+      fnSetFont(); }
+    else if(nWidth != null)
+      oCtx.clearRect(0, 0, nWidth, nHeight);
+  return oPrep.draw(); }
+var rroHitTest = fnDrawTree();
+
+eCanvas.addEventListener (
+  "click",
+  function(v) {
+    var oRect = eCanvas.getBoundingClientRect();
+    var nTX = v.clientX - oRect.left;
+    var nTY = v.clientY - oRect.top;
+    var nCount = rroHitTest.length;
+    for(var n = 0; n < nCount; ++n) {
+      var roHitTest = rroHitTest[n];
+      if(nTX >= roHitTest[0] && nTX < roHitTest[2] && nTY >= roHitTest[1] && nTY < roHitTest[3]) {
+        var oNode = roHitTest[4];
+        sLog += `d${oNode.data.sValue} `;
+        oNode.remove();
+        rroHitTest = fnDrawTree();
+        oRBT.assertValid();
+        break; }}},
+  false );
+
+    </script>
+  </head>
+  <body>
+    <div>
+      <button id="insert">Insert</button>
+      <input id="in" type="text"/>
+      <button id="getAt">Get At</button>
+      <button id="getIndex">Get Index</button>
+      <button id="getPrev">Get Prev</button>
+      <button id="getNext">Get Next</button>
+      <button id="log">Log</button>
+      <button id="clone1">Clone 1</button>
+      <button id="clone2">Clone 2</button>
+    </div>
+    <div>
+      <canvas id="out">
+    </div>
+    </canvas>
+  </body>
+</html>

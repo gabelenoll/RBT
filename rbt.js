@@ -2,8 +2,21 @@ function fnCreate(fnCompareData) {
 
   function fnInnerCreate(oRoot, fnCompareData) {
 
-    function fnRet(oNode) {
-      return oNode !== oNil ? oNode.oItf : null; }
+    function fnAssertValid(oNode) {
+      if(oNode.fRed && (oNode.oParent === oNil || oNode.oParent.fRed))
+        throw new Error();
+      var oLeft = oNode.oLeft;
+      var oRight = oNode.oRight;
+      if(oNode.nCount != oLeft.nCount + oRight.nCount + 1)
+        throw new Error();
+      var nL, nR;
+      nL = oLeft !== oNil ? fnAssertValid(oLeft) : 0;
+      nR = oRight !== oNil ? fnAssertValid(oRight) : 0;
+      if(nL != nR)
+        throw new Error();
+      if(! oNode.fRed)
+        ++nL;
+      return nL; }
 
     function fnCreateNode(oParent, fRed, nCount, oData) {
       var oRet = {
@@ -13,16 +26,22 @@ function fnCreate(fnCompareData) {
         nCount: nCount,
         oData: oData };
       oRet.oItf = {
+        get isNil(){return false;},
+        get red(){return oRet.fRed;},
+        get count(){return oRet.nCount;},
         get data(){return oRet.oData;},
         get index(){return fnIndexOf(oRet);},
-        get next(){return fnRet(fnNext(oRet));},
-        get prev(){return fnRet(fnPrev(oRet));},
+        get next(){return fnNext(oRet).oItf;},
+        get prev(){return fnPrev(oRet).oItf;},
         get parent() {
-          return fnRet(oRet.oParent); },
+          var oParent = oRet.oParent;
+          return (oParent != null ? oParent : oNil).oItf; },
         get left() {
-          return fnRet(oRet.oLeft); },
+          var oLeft = oRet.oLeft;
+          return (oLeft != null ? oLeft : oNil).oItf; },
         get right() {
-          return fnRet(oRet.oRight); },
+          var oRight = oRet.oRight;
+          return (oRight != null ? oRight : oNil).oItf; },
         remove(){fnRemove(oRet);}};
       return oRet; }
 
@@ -42,7 +61,7 @@ function fnCreate(fnCompareData) {
 
     function fnGetAt(nIndex) {
       function fnFind(oRet, nIndex) {
-        if(oRet === oNil)return null;
+        if(oRet === oNil)return oRet;
         var oLeft = oRet.oLeft;
         var nCount = oLeft.nCount;
         if(nCount < nIndex)
@@ -50,8 +69,8 @@ function fnCreate(fnCompareData) {
           else if(nCount > nIndex)
             return fnFind(oLeft, nIndex);
           else
-            return oRet.oItf; }
-      return fnFind(oRoot, nIndex); }
+            return oRet; }
+      return fnFind(oRoot, nIndex).oItf; }
       
     function fnFind(oData) {
       function fnInner(oNode) {
@@ -61,16 +80,16 @@ function fnCreate(fnCompareData) {
             if(oLeft !== oNil)
                 return fnInner(oLeft);
               else
-                return null; }
+                return oNil; }
           else if(nCompare > 0) {
             var oRight = oNode.oRight;
             if(oRight !== oNil)
                 return fnInner(oRight);
               else
-                return null; }
+                return oNil; }
           else
-            return oNode.oItf; }
-      return fnInner(oRoot); }
+            return oNode; }
+      return fnInner(oRoot).oItf; }
 
     function fnIndexOf(oNode) {
       function fnUp(oNode, nRet) {
@@ -86,8 +105,10 @@ function fnCreate(fnCompareData) {
       var oRet = oNode.oRight;
       if(oRet !== oNil)
           while(true) {
-            if(oRet.oLeft === oNil)return oRet;
-            oRet = oRet.oLeft; }
+            if(oRet.oLeft === oNil)
+                return oRet;
+              else
+                oRet = oRet.oLeft; }
         else {
           oRet = oNode.oParent;
           while(oRet !== oNil) {
@@ -99,8 +120,10 @@ function fnCreate(fnCompareData) {
       var oRet = oNode.oLeft;
       if(oRet !== oNil)
           while(true) {
-            if(oRet.oRight === oNil)return oRet;
-            oRet = oRet.oRight; }
+            if(oRet.oRight === oNil)
+                return oRet;
+              else
+                oRet = oRet.oRight; }
         else {
           oRet = oNode.oParent;
           while(oRet !== oNil) {
@@ -332,9 +355,7 @@ function fnCreate(fnCompareData) {
       var oNode = fnInner(oData, oRoot);
       if(oRoot === oNil)
         oRoot = oNode;
-      fnFix(oNode);
-
-      return oNode.oItf; }
+      fnFix(oNode); }
 
     function fnClone(fnCompareData_) {
       if(fnCompareData_ != null) {
@@ -348,15 +369,23 @@ function fnCreate(fnCompareData) {
           return fnInnerCreate(fnCopyNode(oNil, oRoot), fnCompareData); }
 
     return {
+      get root(){return oRoot.oItf;},
       get count(){return oRoot.nCount;},
       getAt: fnGetAt,
       find: fnFind,
       insert: fnInsert,
-      clone: fnClone };}
+      clone: fnClone,
+      assertValid() {
+        if(oRoot !== oNil)
+          fnAssertValid(oRoot); }};}
 
   return fnInnerCreate(oNil, fnCompareData); }
 
 var oNil = {
+  oItf: {
+    get isNil(){return true;},
+    get red(){return false;},
+    get count(){return 0;} },
   get oParent(){return oNil;},
   get fRed(){return false;},
   get nCount(){return 0;} };
