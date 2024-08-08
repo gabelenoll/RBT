@@ -1,10 +1,11 @@
 {
+  "trailingSlash": "auto",
   "routes": [
     {
       "route": "/",
       "rewrite": "/index.html" }],
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclue": ["/DOM/*.js", "Helpers/*.js"]
+    "exclue": ["/Interview/Interview.pdf", "/Interview.html", "/DOM/*.js", "/Helpers/*.js", "/DOMHelper/*.js"]
     }
   }
