@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>DOMHelper Test</title>
+  </head>
+  <body>
+    <script type="module" src="DOMHelper.js"></script>
+    <script type="module">
+      import { initElement as fnInitElement, wrapElement as fnWrapElement } from "./DOMHelper.js";
+
+      var eBody = document.body;
+      var e = fnInitElement().tag("div").par(eBody).txt("Hello").css({"background-color": "yellow"}).create().get();
+      var oE = fnWrapElement(e);
+debugger;
+      oE
+      .txt("Hello world.")
+      .css({"font-weight": "bold", "font-family": "sans-serif"})
+      .xcss("background-color").update()
+      .update();
+
+    </script>
+  </body>
+</html>
